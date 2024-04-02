@@ -103,6 +103,11 @@ class Crawler:
         sleep(CONST_SLEEP_TIME)
 
         # entering email address
+        log(
+            "Trying to submit the email address...",
+            level=1,
+        )        
+
         self.client.find_element_by_xpath("//input[@type='email']").send_keys(
             login_email
         )
@@ -121,12 +126,16 @@ class Crawler:
 
         if success:
             # entering password
+            log(
+                 "Successfully submitted email, now trying password...",
+                level=1,
+            )
             self.client.find_element_by_xpath(
                 "//input[@name='passwd']"
             ).send_keys(login_pass)
 
             self.client.find_element_by_xpath(
-                "//input[@type='submit']"
+                "//button[@type='submit']"
             ).click()
 
             sleep(CONST_SLEEP_TIME)
@@ -139,7 +148,10 @@ class Crawler:
                 log(error, level=0)
             except Exception:
                 error = False
-
+        log(
+            "Made it past password, beginning MFA block...",
+            level=1,
+        )
         # wait until the mfa has been approved
         if success and mfa:
 
@@ -147,6 +159,11 @@ class Crawler:
 
             sleep_counter = 0
             sleep_wait = True
+
+            sleep(4)
+            # this actually works to dump the generated DOM
+            # log(self.client.page_source, level=0)
+
 
             while sleep_wait and sleep_counter < CONST_MAX_REFRESH_COUNT:
                 log(
@@ -158,11 +175,12 @@ class Crawler:
 
                 # wait for MFA approval if needed
                 try:
-                    _ = self.client.find_element_by_id("idDiv_SAOTCAS_Title")
+                    # Look for an element unique to the "Stay logged in?" page:
+                    _ = self.client.find_element_by_id("loginOptionHiddenInput")
                 except Exception:
                     try:
                         self.client.find_element_by_xpath(
-                            "//input[@type='submit']"
+                            "//button[@type='submit']"
                         )
 
                         log("MFA approved!", level=1)
@@ -183,7 +201,7 @@ class Crawler:
         else:
             # stay signed in
             self.client.find_element_by_xpath(
-                "//input[@type='submit']"
+                "//button[@type='submit']"
             ).click()
 
             sleep(CONST_SLEEP_TIME)
